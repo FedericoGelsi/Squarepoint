@@ -5,6 +5,7 @@
 import sys
 import pygame
 import random
+from pygame.locals import *
 # Funtions
 """
 def main():
@@ -137,7 +138,7 @@ class Map:
         self.bg_color = (0,0,0)
         self.map = pygame.display.set_mode((width, height))
         pygame.display.set_caption('SquarePoint')
-        self.bar = Bar(20, 500)
+        self.bar = Bar(50, 500)
         self.lose_limit = self.height-self.height//6
         self.squares = []
         self.player = None
@@ -162,40 +163,43 @@ class Bar:
     def __init__(self, px, py):
         self.px = px                # Horizontal position 
         self.py = py                # Vertical position
+        self.width = 0
         self.color = (46, 47, 66)   # Dark Black
     
     def set_color(self, r, g, b):
         self.color = (r,g,b)        # Change the bar color
+    
+    def set_width(self, map_w, padding=60):
+        self.width = map_w - padding*2
+
 
     def draw_bar(self, player, map, lose_limit, width):
-        SP_R = pygame.Rect((width-self.px)/2, lose_limit - (lose_limit-width), self.px, player.radius)
+        SP_R = pygame.Rect(self.px, self.py, self.width, player.radius*2)
         pygame.draw.rect(map, self.color, SP_R)
-        SP_C = ((width-self.px)//2, lose_limit - (lose_limit-width) + player.radius//2)
-        pygame.draw.circle(map, self.color , SP_C  , int(player.width/2))
-        SP_C = ((width+self.px)//2, lose_limit - (lose_limit-width) + player.radius//2)
-        pygame.draw.circle(map, self.color , SP_C  , int(player.radius/2))
+        pygame.draw.circle(map, self.color , (self.px, self.py + player.radius)  , player.radius)
+        pygame.draw.circle(map, self.color , (self.px + self.width, self.py + player.radius)  , player.radius)
 
 class Player:
     def __init__(self, px, py, name="AAA"):
         self.px = px
         self.py = py
-        self.speed = 5
+        self.speed = 10
         self.color = (95, 208, 159)
         self.name = name
         self.score = 0
-        self.radius = 10
+        self.radius = 20
     
     def change_color(self, r, g, b):
         self.color = (r,g,b)
 
     def draw_player(self, window):
-        pygame.draw.circle(window, self.color , (self.px, self.py)  , self.radius )
+        pygame.draw.circle(window, self.color , (self.px, self.py + self.radius)  , self.radius )
 
     def move_player(self, dir, bar):
-        if dir == "L" and self.px <= (bar.width - self.radius)/2:
-            self.px -= int(self.speed/canvas.fps)*2
-        elif dir == "R" and self.px <= (canvas.width + self.radius)/2:
-            self.px += int(self.speed/canvas.fps)*2
+        if dir == "L" and self.px >= 60:
+            self.px -= self.speed
+        elif dir == "R" and self.px <= bar.width + self.radius*4:
+            self.px += self.speed
 
     def get_event(self, bar):
         for event in pygame.event.get():
@@ -228,8 +232,10 @@ def main():
     game = Map(600, 800)
     game.set_bg_color(0,0,0)
     game.create_map()
+    game.bar.set_width(game.width)
     game.player = Player(200,500)
     while True:
+        game.update_canvas()
         game.player.get_event(game.bar)
         FPSCLOCK.tick(FPS)  
 
