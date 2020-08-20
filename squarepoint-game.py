@@ -7,237 +7,120 @@ import pygame
 import random
 from pygame.locals import *
 # Funtions
-"""
-def main():
-    global FPSCLOCK, DISPLAYSURF
-    SQUARES = []
-    pygame.init()
-    look = 0
-    FPSCLOCK = pygame.time.Clock()
-    DISPLAYSURF = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT))
-    
-    newSquare(SQUARES)
-    while True:
-        NP = menu()
-        while not(NP[6]):
-            look = play( NP , SQUARES , look)
-    printBox_2(NP[7])
-def menu():                             # Main menu
-    flag = False
-    DISPLAYSURF.fill(WINDOW_COLOR)
-    printBox_1()
-    printBox_3()
-    while not(flag):
-        for event in pygame.event.get():
-            if event.type == KEYDOWN:
-                if event.key == K_e:
-                    flag = True
-                    NP = newPlayer()
-                if event.key == K_ESCAPE:
-                    pygame.quit()
-                    sys.exit()
-        pygame.display.update()
-    return NP
-def printBox_1():
-    TITLE_FONT = FONT.render('SquarePoint', True , WHITE)
-    TITLE = TITLE_FONT.get_rect()
-    TITLE.topleft = ((WINDOWWIDTH/2)-50 , WINDOWHEIGHT/6)
-    DISPLAYSURF.blit(TITLE_FONT , TITLE)
-    return False
-def printBox_2( SC ):
-    GOV_FONT = FONT.render('GAME OVER', True , GREEN)
-    GOV = GOV_FONT.get_rect()
-    GOV.topleft = ((WINDOWWIDTH/2)-50 , WINDOWHEIGHT/2)
-    DISPLAYSURF.blit(GOV_FONT , GOV)
-    SC_FONT = FONT.render(str(SC), True , GREEN)
-    SC = SC_FONT.get_rect()
-    SC.topleft = ((WINDOWWIDTH/2)-50 , WINDOWHEIGHT*4/6)
-    DISPLAYSURF.blit(SC_FONT , SC)
-    return False
-def printBox_3():
-    KEY_FONT = FONT.render('Press E to start...', True , WHITE)
-    KEY = KEY_FONT.get_rect()
-    KEY.topleft = (WINDOWWIDTH/2-70 , WINDOWHEIGHT*5/6)
-    DISPLAYSURF.blit(KEY_FONT , KEY)
-    return False
-def play( NP , SQUARES , look):
-    Q_SQ = len(SQUARES)
-    DISPLAYSURF.fill(WINDOW_COLOR)
-    for event in pygame.event.get():
-
-    movePlayer(NP)
-    # menu()
-    space_move()
-    drawPlayer(NP)
-    if moveSquare(Q_SQ , SQUARES , NP):
-        look -= 1
-    pygame.display.update()
-    if SQUARES[look][1] > GAMEHEIGHT_END*1//3:
-        newSquare(SQUARES)
-        look += 1
-    FPSCLOCK.tick(FPS)
-    return look
-def newSquare(sqs):
-    C_GR = random.uniform(0.0, 10.0)
-    newSQ = []      # [ x , y , xf , xi]
-    newSQ.append(random.randint(OBJ_SIZE[0], GAMEWIDTH)) # Generate x position
-    newSQ.append(0) # y axis
-    if newSQ[0] < GAMEWIDTH/2:
-        m = newSQ[0] - random.randint(newSQ[0]+1, GAMEWIDTH-OBJ_SIZE[0])
-    elif newSQ[0] >= GAMEWIDTH/2:
-        m = newSQ[0] - random.randint(1, newSQ[0]-1)
-    m = -400/m
-    newSQ.append(m)
-    newSQ.append(newSQ[0])
-    if C_GR > 3.0 and C_GR < 5.0:
-        newSQ.append(GREEN)
-    else:
-        newSQ.append(WHITE)
-    sqs.append(newSQ)
-    return False
-def moveSquare( Q_SQ , SQUARES , NP ):
-    i = 0
-    D_SQ = False
-    while i < Q_SQ:
-        SQ = pygame.Rect(SQUARES[i][0], SQUARES[i][1], OBJ_SIZE[0], OBJ_SIZE[1])
-        pygame.draw.rect(DISPLAYSURF, SQUARES[i][4], SQ)
-        if SQUARES[i][1]+OBJ_SIZE[1] > GAMEHEIGHT_END-OBJ_SIZE[1]:
-            del SQUARES[i]
-            Q_SQ -= 1
-            D_SQ = True
-        else:
-            SQUARES[i][1] += OBJ_SPEED/FPS
-            SQUARES[i][0] = SQUARES[i][1]/SQUARES[i][2] + SQUARES[i][3]
-        colisionOP(NP, SQUARES[i])
-        if SQUARES[i][4] == GREEN and NP[5]:
-            # NP[6] = score( NP[6] )
-            del SQUARES[i]
-            Q_SQ -= 1
-            D_SQ = True
-            NP[5] = False
-        elif SQUARES[i][4] == WHITE and NP[5]:
-            # gameover()
-            NP[5] = False
-            NP[6] = True
-        i += 1
-    return D_SQ
-
-
-def colisionOP( NP , SQ ):
-    if not(NP[5]):
-        if SQ[1] <= NP[1]+(OBJ_SIZE[1]/2) and SQ[1] >= NP[1]-(OBJ_SIZE[1]/2): # COL on Y axis
-            if NP[0] > SQ[0] and NP[0] < SQ[0] + OBJ_SIZE[0]:       # COL on X axis
-                NP[5] = True
-    return
-"""
-# Main code
 class Map:
     def __init__(self, width, height):
+        pygame.init()
+        pygame.font.init()
         self.width = width
         self.height = height
-        self.bg_color = (0,0,0)
-        self.map = pygame.display.set_mode((width, height))
-        pygame.display.set_caption('SquarePoint')
-        self.bar = Bar(50, 500)
-        self.lose_limit = self.height-self.height//6
-        self.squares = []
-        self.player = None
+        self.color = None
+        self.caption = "SquarePoint"
+        self.icon = pygame.image.load("icon.png")
+        self.window = self.create_window((29,51,83))
+        self.header = None
+       
+
+    def set_width(self, width):
+        """Sets the window width"""
+        self.width = width
     
-    def set_bg_color(self, r, g, b):
-        self.bg_color = (r,g,b)
+    def get_width(self):
+        """Gets the window width"""
+        return self.width
 
-    def create_map(self):
-        self.map = pygame.display.set_mode((self.width, self.height))
+    def set_height(self, height):
+        """Sets the window height"""
+        self.height = height
 
-    def update_canvas(self):
-        self.map.fill(self.bg_color)
-        self.bar.draw_bar(self.player, self.map, self.lose_limit, self.width)
-        self.player.draw_player(self.map)
-        """
-        for square in self.squares:
-            square.draw_square(self.map)
-        """
+    def get_height(self):
+        """Gets the window height"""
+        return self.height
+
+    def set_color(self, color):
+        """Sets the window color"""
+        self.color = color
+    
+    def create_window(self, color=(0,0,0)):
+        self.set_color(color)
+        self.window = pygame.display.set_mode((self.width, self.height))
+        pygame.display.set_caption(self.caption)
+        pygame.display.set_icon(self.icon)
+        self.draw()
+        self.header = Header(self.width, 50)
+        self.header.create_header(self.window)#, self.color)    SEt color later
+
+    def draw(self):
+        self.window.fill(self.color)
+
+    def update(self):
         pygame.display.update()
         
-class Bar:
-    def __init__(self, px, py):
-        self.px = px                # Horizontal position 
-        self.py = py                # Vertical position
-        self.width = 0
-        self.color = (46, 47, 66)   # Dark Black
-    
-    def set_color(self, r, g, b):
-        self.color = (r,g,b)        # Change the bar color
-    
-    def set_width(self, map_w, padding=60):
-        self.width = map_w - padding*2
 
+class Header:
+    def __init__(self, width, height):
+        self.icon = pygame.image.load("icon.png")
+        self.playername = ""
+        self.width = width
+        self.height = height
+        self.color = None
 
-    def draw_bar(self, player, map, lose_limit, width):
-        SP_R = pygame.Rect(self.px, self.py, self.width, player.radius*2)
-        pygame.draw.rect(map, self.color, SP_R)
-        pygame.draw.circle(map, self.color , (self.px, self.py + player.radius)  , player.radius)
-        pygame.draw.circle(map, self.color , (self.px + self.width, self.py + player.radius)  , player.radius)
+    def set_playername(self, name):
+        self.playername = name
 
-class Player:
-    def __init__(self, px, py, name="AAA"):
-        self.px = px
-        self.py = py
-        self.speed = 10
-        self.color = (95, 208, 159)
-        self.name = name
-        self.score = 0
-        self.radius = 20
-    
-    def change_color(self, r, g, b):
-        self.color = (r,g,b)
+    def set_lives(self, lives):
+        self.lives = lives
 
-    def draw_player(self, window):
-        pygame.draw.circle(window, self.color , (self.px, self.py + self.radius)  , self.radius )
+    def set_level(self, level):
+        self.level = level
 
-    def move_player(self, dir, bar):
-        if dir == "L" and self.px >= 60:
-            self.px -= self.speed
-        elif dir == "R" and self.px <= bar.width + self.radius*4:
-            self.px += self.speed
+    def get_height(self):
+        return self.height
 
-    def get_event(self, bar):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            elif event.type == KEYDOWN:
-                if (event.key == K_LEFT or event.key == K_a):
-                    self.move_player("L", bar)
-                elif (event.key == K_RIGHT or event.key == K_d):
-                    self.move_player("R", bar)
-                elif event.key == K_ESCAPE:
-                    pygame.quit()
-
-    def add_point(self):
-        self.score += 1
-
-class Square:
-    def __init__(self, radius, map_w, color=(255,255,255)):
-        self.px = random.randint(self.radius, map_w)
-        self.py = 0
-        self.radius = radius
+    def set_color(self, color):
+        """Sets the header color"""
         self.color = color
 
+    def create_header(self, window, color=(0,0,0)):
+        """Create the header"""
+        self.set_color(color)
+        block = pygame.Rect(0, 0, self.width, self.height)
+        pygame.draw.rect(window, self.color, block)
+
+
+class Bar:
+    def __init__(self):
+        self.px = px
+        self.py = py
+        self.width = width
+        self.height = height
+        self.color = None
+
+    def set_position(self, px, py):
+        self.px = px
+        self.py = py
+
+    def set_color(self, color):
+        self.color = color
+
+    def draw(self):
+        
+
+
+class Player:
+    def __init__(self, px, py, radius):
+        self.px = px
+        self.py = py
+        self.radius = radius
+        self.color = None
+
+    def draw(self):
+
+    
+
 def main():
-    pygame.init()
-    pygame.font.init()
-    FPS = 60
-    FPSCLOCK = pygame.time.Clock()
-    game = Map(600, 800)
-    game.set_bg_color(0,0,0)
-    game.create_map()
-    game.bar.set_width(game.width)
-    game.player = Player(200,500)
+    game = Map(500,900)
     while True:
-        game.update_canvas()
-        game.player.get_event(game.bar)
-        FPSCLOCK.tick(FPS)  
+        game.update()
 
 
 if __name__ == '__main__':
