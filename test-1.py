@@ -1,66 +1,37 @@
-# Imports
-import sys, pygame , random
 
-# Funtions
+import pygame
+from pygame.locals import *
 
-def object_move( sq ):
-    if sq[2]:
-        sq[0] += random.random()
-    else:
-        sq[0] -= random.random()
-    if sq[3]:
-        sq[1] += random.random()
-    else:
-        sq[1] -= random.random()
-    return False
+def main():
+    # Initialise screen
+    pygame.init()
+    screen = pygame.display.set_mode((450, 200))
+    pygame.display.set_caption('Basic Pygame program')
 
-def check_position( sq , w , h , sq_tam):
-    if sq[0] >= w-sq_tam[0]:
-        sq[2] = False
-    elif sq[0] <= 0:
-        sq[2] = True
-    if sq[1] >= h-sq_tam[1]:
-        sq[3] = False
-    elif sq[1] <= 0:
-        sq[3] = True
-    return False
+    # Fill background
+    background = pygame.Surface(screen.get_size())
+    background = background.convert()
+    background.fill((250, 250, 250))
 
-def make_sq( width , height ):
-    q_sq = []
-    rsq = 0
-    while rsq != 25:
-        rsq = random.randint(1,100)
-    if len(q_sq)<=10:
-        x = random.randint(0, width)
-        y = random.randint(0, height)
-        q_sq.append([ x , y , True , True])     # sq = [ x , y , fx , fy ]
-    return q_sq
+    # Display some text
+    font = pygame.font.Font(None, 36)
+    text = font.render("Hello There", 1, (10, 10, 10))
+    textpos = text.get_rect()
+    textpos.centerx = background.get_rect().centerx
+    background.blit(text, (0,0))
 
-def draw_sq ( sq , sq_tam, screen):
-        #Square
-    c_sq = (95, 208, 159)
-    square = (sq[0], sq[1], sq_tam[0], sq_tam[1])
-    draw_sq = pygame.draw.rect(screen,c_sq,square)
-    return False
-def play_sq ( width , height , screen ):
-    sq_tam = [25, 25]
-    q_sq = make_sq(width , height)
-    for i in range(len(q_sq)):
-        object_move( q_sq[i] )
-        check_position( q_sq[i] , width , height , sq_tam)
-        draw_sq( q_sq[i] , sq_tam, screen)
-    return False
-pygame.init()
-    #Screen
-size = width, height = 360,640
-screen = pygame.display.set_mode(size,0,32)
-black = (27, 27, 27)
-
-screen.fill(black)
-while True:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT: sys.exit()
-    # rect = (sq[0], sq[1] , sq_tam[0], sq_tam[1] )
-    play_sq( width , height , screen)
-    # draw_sq = pygame.draw.rect(screen,c_sq,rect)
+    # Blit everything to the screen
+    screen.blit(background, (0, 0))
     pygame.display.flip()
+
+    # Event loop
+    while 1:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                return
+
+        screen.blit(background, (0, 0))
+        pygame.display.flip()
+
+
+if __name__ == '__main__': main()
