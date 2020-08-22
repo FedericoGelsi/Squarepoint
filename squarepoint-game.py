@@ -31,7 +31,7 @@ class Screen:
         self.window = pygame.display.set_mode((self.width, self.height))
         self.game = Map(self.width, self.height, self.window)        
         self.caption = "SquarePoint"
-        self.icon = pygame.image.load("icon.png")
+        self.icon = pygame.image.load(r"D:\2- PROYECTOS\2- PyGame\1- Squarepoint\icon.png")
         pygame.display.set_caption(self.caption)
         pygame.display.set_icon(self.icon)
 
@@ -207,7 +207,7 @@ class Header:
         self.height = height
         self.color = color
         self.block = pygame.Surface((self.width, self.height)).convert()
-        self.icon = pygame.transform.scale(pygame.image.load("icon.png"), (50,50)).convert()
+        self.icon = pygame.transform.scale(pygame.image.load(r"D:\2- PROYECTOS\2- PyGame\1- Squarepoint\icon.png"), (50,50)).convert()
         self.name_font = Font(15, PLAYER_COLOR)
         self.lives_font = Font(15, PLAYER_COLOR)
         self.score_font = Font(15, SCORE_COLOR)
@@ -290,9 +290,9 @@ class Square:
 class Menu:
     def __init__(self):
         self.p_bar = Font(10,SCORE_COLOR)
-        self.up_arrow = pygame.transform.scale(pygame.image.load("up_arrow.png"), (25,25)).convert()
-        self.left_arrow = pygame.transform.scale(pygame.image.load("left_arrow.png"), (25,25)).convert()
-        self.right_arrow = pygame.transform.scale(pygame.image.load("right_arrow.png"), (25,25)).convert()
+        self.up_arrow = pygame.transform.scale(pygame.image.load(r"D:\2- PROYECTOS\2- PyGame\1- Squarepoint\up_arrow.png"), (25,25)).convert()
+        self.left_arrow = pygame.transform.scale(pygame.image.load(r"D:\2- PROYECTOS\2- PyGame\1- Squarepoint\left_arrow.png"), (25,25)).convert()
+        self.right_arrow = pygame.transform.scale(pygame.image.load(r"D:\2- PROYECTOS\2- PyGame\1- Squarepoint\right_arrow.png"), (25,25)).convert()
         self.welcome = Font(24, LEVEL_COLOR)
         self.play = Font(20, PLAYER_COLOR)
         self.exit = Font(15, PLAYER_COLOR)
@@ -433,7 +433,7 @@ class Font:
     Used to create an define a font.
     """
     def __init__(self, size: int , color: tuple=WHITE):
-        self.type = pygame.font.Font("Pixel_font.ttf", size)
+        self.type = pygame.font.Font(r"D:\2- PROYECTOS\2- PyGame\1- Squarepoint\Pixel_font.ttf", size)
         self.fontcolor = color
         self.text = ""
 
@@ -536,6 +536,7 @@ class Player:
         self.score = 0
         self.lives = 5
         self.level = 1
+        self.q_sq = 0
 
 def main():
     win = Screen(500,900)
