@@ -5,6 +5,7 @@
 import sys
 import pygame
 import random
+import math
 from pygame.locals import *
 
 # TAGS
@@ -61,6 +62,7 @@ class Map:
         self.bar = Bar()
         self.playing = 1
         self.menu = Menu()
+        self.game_over = GameOver()
         self.squares = []
         self.map_limit = self.height
         self.clock = pygame.time.Clock()
@@ -104,7 +106,6 @@ class Map:
         Draws the header and the bar with all of his objects into the game.
         """
         self.window.fill(self.color)
-        
         if self.playing == 1:
             self.menu.draw(self.window)
             self.bar.draw(self.window)
@@ -118,9 +119,16 @@ class Map:
             self.bar.draw(self.window)
             for square in self.squares:
                 square.draw(self.window)
-            
+                
+            # PROGRESS TO DO        
+            if self.bar.player.get_level() > 1:
+                partition = (self.width / (50* (2**(self.bar.player.get_level()-1))))*10
+            else: 
+                partition = (self.width / (50* (2**self.bar.player.get_level())))*10
+            self.header.set_progress(partition, self.bar.player.get_sq())
+
         elif self.playing == 3:
-            pass # Implement
+            self.game_over.draw(self.window, self.bar.player.get_name(), self.bar.player.get_score())
             
         self.header.draw(self.window, self.playing)
         self.window.blit(self.header.block, (0,0))
@@ -146,6 +154,8 @@ class Map:
         if key[pygame.K_RETURN]:
             self.playing = 2
             self.bar.player.set_name(self.bar.player.get_name())
+            self.bar.player.reset()
+            self.squares.clear()
 
         if self.playing == 1:
             self.header.name_font.set_text(self.bar.player.get_name())
@@ -154,30 +164,38 @@ class Map:
         """
         Updates the game's objects into the screen
         """ 
-        count = 0
+        i = 0
         if self.playing == 2:
-            self.new_square()
-            for i in range(len(self.squares)-1):
-                
-                if self.squares[i].py >= 800:
+            if len(self.squares) < 2:
+                self.new_square(self.bar.player.get_level())
+            while i < len(self.squares)-1:
+                if len(self.squares) < 5 and self.squares[i].py > 400:
+                    self.new_square(self.bar.player.get_level())
+                    self.flag = True
+                if self.squares[i].py >= self.bar.py + 100:
                     if self.squares[i].color == PLAYER_COLOR:
                         self.bar.player.subtract_live()
-                    self.squares.pop(i)
-                elif self.bar.player.shape.colliderect(self.squares[i].shape):
+                    del self.squares[i]
+                    break
+                elif self.squares[i].shape.colliderect(self.bar.player.shape):
                     if self.squares[i].color == WHITE:
                         self.bar.player.subtract_live()
                     elif self.squares[i].color == PLAYER_COLOR:
                         self.bar.player.add_point()
-                        count += 1
-                    self.squares.pop(i)
+                    del self.squares[i]
+                    break
                 else:
                     self.squares[i].move_square(self.fps)
-            #if self.bar.player.get_lives() == 0:
-             #d   self.playing = 2
+                i += 1
+            if self.bar.player.get_score() == (50* (2**(self.bar.player.get_level()))):
+                self.bar.player.q_sq = 0
+                self.bar.player.add_level()
+            if self.bar.player.get_lives() == 0:
+                self.playing = 3
         pygame.display.flip()       
 
-    def new_square(self):
-        self.squares.append(Square(self.bar.player.radius*2))
+    def new_square(self, speed: int):
+        self.squares.append(Square(self.bar.player.radius*2, speed))
 
 class Header:
     """
@@ -195,7 +213,7 @@ class Header:
         self.score_font = Font(15, SCORE_COLOR)
         self.level_font = Font(15, LEVEL_COLOR)
         self.data_font = Font(15)
-
+        self.progress = 0
         
 
     def set_playername(self, name: str):
@@ -219,6 +237,9 @@ class Header:
     def set_color(self, color: tuple=BLACK):
         # Sets the header color
         self.color = color
+    
+    def set_progress(self, partition, progress):
+        self.progress = partition* progress
 
     def draw(self, window: object, playing: int):
         self.block.fill(self.color)
@@ -237,23 +258,19 @@ class Header:
             self.data_font.set_text("Level:")
             self.block.blit(self.data_font.render(), (288,46))
             self.block.blit(self.level_font.render(), (288+self.data_font.render().get_width(),46))
-
-            # PROGRESS TO DO
-
+            pygame.draw.line(self.block, LEVEL_COLOR, (0,self.height), (self.progress,self.height), 10)
         window.blit(self.block, (0,0))
 
 class Square:
-    def __init__(self, size):
+    def __init__(self, size: int, speed:int):
         self.color = self.set_random_color()
         self.px = self.set_init_position()
         self.py = 0
+        self.limit = 900
         self.size = size
-        self.endx = self.set_endpoint()
-        self.endy = 900
-        self.m = (self.endy - self.py) / (self.endx - self.px)
-        self.speed = 50
+        self.speed = math.log2(speed*10)*70
         self.shape = pygame.Rect(self.px, self.py, self.size, self.size)
-    
+
     def set_random_color(self):
         if random.randint(0, 100) >= 60:
             return PLAYER_COLOR
@@ -261,15 +278,10 @@ class Square:
             return WHITE
 
     def set_init_position(self) -> int:
-        return random.randint(100, 500)
+        return random.randint(50, 400)
 
     def move_square(self, fps: int):
-        self.px += self.speed / fps
-        self.py = self.m * self.px
-
-    
-    def set_endpoint(self) -> int:
-        return random.randint(50,450)
+        self.py += self.speed/ fps
 
     def draw(self, window: object):
         self.shape = pygame.Rect(self.px, self.py, self.size, self.size)
@@ -356,9 +368,65 @@ class Menu:
 
 class GameOver:
     def __init__(self):
-        self.x = 0
+        self.game_over = Font(24, LEVEL_COLOR)
+        self.score = Font(20, PLAYER_COLOR)
+        self.play = Font(20, PLAYER_COLOR)
+        self.exit = Font(15, PLAYER_COLOR)
 
-        # IMPLEMENTAR
+    def draw(self, window: object, playername: str, score: int):
+        # GAME OVER
+        self.game_over.set_text("Game over !!")
+        window.blit(self.game_over.render(), (window.get_width()//2-self.game_over.render().get_width()//2,222))
+       
+        # SCORE 1
+        self.score.set_text(playername + " your")
+        pos = window.get_width()//2-self.score.render().get_width()//2
+        self.score.set_text(playername)
+        window.blit(self.score.render(), (pos,350))
+        pos +=self.score.render().get_width()
+        self.score.set_color(WHITE)
+        self.score.set_text(" your")
+        window.blit(self.score.render(), (pos,350))
+
+        # SCORE 2
+        self.score.set_text("score is " + str(score))
+        pos = window.get_width()//2-self.score.render().get_width()//2
+        self.score.set_text("score is ")
+        window.blit(self.score.render(), (pos,380))
+        pos +=self.score.render().get_width()
+        self.score.set_text(str(score))
+        self.score.set_color(SCORE_COLOR)
+        window.blit(self.score.render(), (pos,380))
+
+        # PRESS ENTER TO PLAY
+        self.play.set_text("Press enter to")
+        pos = window.get_width()//2-self.play.render().get_width()//2
+        self.play.set_text("Press ")
+        window.blit(self.play.render(), (pos,530))
+        pos +=self.play.render().get_width()
+        self.play.set_color(SCORE_COLOR)
+        self.play.set_text("enter ")
+        window.blit(self.play.render(), (pos,530))
+        pos +=self.play.render().get_width()
+        self.play.set_color(PLAYER_COLOR)
+        self.play.set_text("to")
+        window.blit(self.play.render(), (pos,530))
+        self.play.set_text("play again")
+        window.blit(self.play.render(), (window.get_width()//2-self.play.render().get_width()//2,560))
+
+        # PRESS ESCAPE TO EXIT
+        self.exit.set_text("Press escape to exit")
+        pos = window.get_width()//2-self.exit.render().get_width()//2
+        self.exit.set_text("Press ")
+        window.blit(self.exit.render(), (pos,645))
+        pos +=self.exit.render().get_width()
+        self.exit.set_color(LEVEL_COLOR)
+        self.exit.set_text("escape ")
+        window.blit(self.exit.render(), (pos,645))
+        pos +=self.exit.render().get_width()
+        self.exit.set_color(PLAYER_COLOR)
+        self.exit.set_text("to exit")
+        window.blit(self.exit.render(), (pos,645))
 
 class Font:
     """
@@ -418,6 +486,7 @@ class Player:
         self.name = ""
         self.speed = 10
         self.shape = None
+        self.q_sq = 0
 
     def set_color(self, color: tuple):      
         self.color = color
@@ -429,8 +498,7 @@ class Player:
 
     def add_point(self):
         self.score += 10
-        if self.score%100 == 0:
-            self.add_live()
+        self.q_sq += 1
         
     def get_score(self) -> int:
         return self.score
@@ -453,13 +521,21 @@ class Player:
 
     def add_level(self):
         self.level += 1
+        self.add_live()
 
     def get_level(self) -> int:
         return self.level
     
+    def get_sq( self) -> int:
+            return self.q_sq
+    
     def draw(self, window: object):
         self.shape = pygame.draw.circle(window, self.color , (self.px, self.py), self.radius)
     
+    def reset(self):
+        self.score = 0
+        self.lives = 5
+        self.level = 1
 
 def main():
     win = Screen(500,900)
